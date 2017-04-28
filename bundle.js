@@ -7,6 +7,12 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _helper = require('./helper');
+
+var _helper2 = _interopRequireDefault(_helper);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Deck = function () {
@@ -28,18 +34,7 @@ var Deck = function () {
   _createClass(Deck, [{
     key: 'shuffle',
     value: function shuffle() {
-      var m = this.cards.length,
-          t,
-          i;
-      // While there remain elements to shuffle
-      while (m) {
-        // Pick a remaining element
-        i = Math.floor(Math.random() * m--);
-        // And swap it with the current element
-        t = this.cards[m];
-        this.cards[m] = this.cards[i];
-        this.cards[i] = t;
-      }
+      _helper2.default.shuffler(this.cards);
     }
   }, {
     key: 'deal',
@@ -56,7 +51,7 @@ var Deck = function () {
 
 exports.default = Deck;
 
-},{}],2:[function(require,module,exports){
+},{"./helper":3}],2:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -93,6 +88,31 @@ var Hand = function () {
 exports.default = Hand;
 
 },{}],3:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var Helper = {
+  shuffler: function shuffler(cards) {
+    var m = cards.length,
+        t,
+        i;
+    // While there remain elements to shuffle
+    while (m) {
+      // Pick a remaining element
+      i = Math.floor(Math.random() * m--);
+      // And swap it with the current element
+      t = cards[m];
+      cards[m] = cards[i];
+      cards[i] = t;
+    }
+  }
+};
+
+exports.default = Helper;
+
+},{}],4:[function(require,module,exports){
 'use strict';
 
 var _deck = require('./deck');
@@ -103,19 +123,42 @@ var _hand = require('./hand');
 
 var _hand2 = _interopRequireDefault(_hand);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+var _helper = require('./helper');
 
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+var _helper2 = _interopRequireDefault(_helper);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var deck = new _deck2.default();
 var hands = [new _hand2.default('player'), new _hand2.default('computer')];
 
-var play = function play() {
+var war = false;
+var pool = [];
+var playerDeck = document.querySelector('.player .deck');
+
+var round = function round() {
+  var plays = play(war);
+  show(plays);
+  var result = resolve(plays);
+  var winner = result.length > 1 ? null : result[0];
+  war = !winner;
+  if (winner) {
+    console.log(winner.player);
+    reward(winner.player);
+  }
+  count();
+};
+
+var play = function play(war) {
+  if (war) wager();
   var plays = hands.map(function (hand) {
     return {
       player: hand.name,
       card: hand.play()
     };
+  });
+  plays.forEach(function (play) {
+    pool.push(play.card);
   });
   return plays;
 };
@@ -138,43 +181,61 @@ var resolve = function resolve(plays) {
   }, []);
 };
 
+var wager = function wager() {
+  hands.forEach(function (hand) {
+    pool.push(hand.play());
+  });
+};
+
+var reward = function reward(winner) {
+  _helper2.default.shuffler(pool);
+  hands.forEach(function (hand) {
+    if (hand.name === winner) {
+      while (pool.length > 0) {
+        hand.take(pool.shift());
+      }
+    }
+  });
+};
+
 var count = function count() {
   hands.forEach(function (hand) {
     var elem = document.querySelector('.' + hand.name + ' .count');
+    if (hand.cards.length === 0) loser(hand.name);
     elem.innerHTML = hand.cards.length.toString();
   });
 };
 
-var victor = function victor(p, c) {
-  if (p.value !== c.value) {
-    var _hands$winner$toLower;
-
-    var winner = p.value > c.value ? 'Player' : 'Computer';
-    console.log(winner + ' wins!');
-    (_hands$winner$toLower = hands[winner.toLowerCase()]).push.apply(_hands$winner$toLower, _toConsumableArray(shuffle(pool)));
-    pool = [];
-    count();
-  } else {
-    war = true;
-    console.log('War!');
-  }
+var loser = function loser(player) {
+  var remove = hands.reduce(function (acc, hand, index) {
+    return hand.cards.length === 0 ? index : acc;
+  }, 0);
+  hands.splice(remove, 1);
+  victor();
 };
 
-var war = false;
-var pool = [];
-var playerDeck = document.querySelector('.player .deck');
+var victor = function victor() {
+  if (hands.length === 1) {
+    clearInterval(intervalId);
+    var winner = hands.shift();
+    console.log(winner.name, 'wins!');
+  }
+};
 
 deck.shuffle();
 deck.deal(hands);
 
 count();
 
-playerDeck.addEventListener('click', function (evt) {
-  var plays = play();
-  var winner = resolve(plays);
-  show(plays);
+var intervalId = void 0;
+playerDeck.addEventListener('click', round);
+window.addEventListener('keyup', function (evt) {
+  if (evt.keyCode === 32) {
+    if (intervalId) clearInterval(intervalId);
+    intervalId = setInterval(round, 250);
+  }
 });
 
-},{"./deck":1,"./hand":2}]},{},[1,2,3])
+},{"./deck":1,"./hand":2,"./helper":3}]},{},[1,2,3,4])
 
 //# sourceMappingURL=bundle.js.map
