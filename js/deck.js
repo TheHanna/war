@@ -1,3 +1,5 @@
+import Helper from './helper';
+
 export default class Deck {
   constructor() {
     const suits = ['hearts', 'clubs', 'spades', 'diamonds'];
@@ -14,16 +16,7 @@ export default class Deck {
   }
 
   shuffle() {
-    var m = this.cards.length, t, i;
-    // While there remain elements to shuffle
-    while (m) {
-      // Pick a remaining element
-      i = Math.floor(Math.random() * m--);
-      // And swap it with the current element
-      t = this.cards[m];
-      this.cards[m] = this.cards[i];
-      this.cards[i] = t;
-    }
+    Helper.shuffler(this.cards);
   }
 
   deal(hands) {
