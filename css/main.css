@@ -16,7 +16,7 @@ section.player, section.computer {
 
 section.player {
   justify-content: flex-end;
-  background-color: #ded;
+  background-color: #dde;
 }
 
 section.computer {
@@ -35,14 +35,14 @@ section.computer {
 }
 
 .player .deck {
-  background-image: url(../img/player_back.png);
+  background-image: url(../img/blue_back.png);
   cursor: pointer;
   order: 2;
 }
 
 .computer .deck {
   align-self: flex-end;
-  background-image: url(../img/computer_back.png);
+  background-image: url(../img/red_back.png);
 }
 
 .play {
@@ -59,7 +59,7 @@ section.computer {
 }
 
 .player .play {
-  border-color: green;
+  border-color: blue;
 }
 
 .count {
