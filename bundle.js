@@ -133,24 +133,32 @@ var deck = new _deck2.default();
 var hands = [new _hand2.default('player'), new _hand2.default('computer')];
 
 var war = false;
+var wars = 0;
+var rounds = 0;
+var maxSwing = 0;
 var pool = [];
 var playerDeck = document.querySelector('.player .deck');
 
 var round = function round() {
+  rounds++;
   var plays = play(war);
   show(plays);
   var result = resolve(plays);
   var winner = result.length > 1 ? null : result[0];
   war = !winner;
   if (winner) {
-    console.log(winner.player);
+    // console.log(winner.player);
     reward(winner.player);
   }
   count();
+  console.log('::=====-----=====::');
 };
 
 var play = function play(war) {
+  console.log('playing');
+  if (war) console.log('warring');
   if (war) wager();
+  if (war) wars++;
   var plays = hands.map(function (hand) {
     return {
       player: hand.name,
@@ -164,6 +172,7 @@ var play = function play(war) {
 };
 
 var show = function show(plays) {
+  console.log('showing');
   plays.forEach(function (play) {
     var elem = document.querySelector('.' + play.player + ' .play');
     var img = 'img/cards/' + play.card.suit + play.card.face + '.png';
@@ -172,6 +181,7 @@ var show = function show(plays) {
 };
 
 var resolve = function resolve(plays) {
+  console.log('resolving');
   var max = Math.max.apply(Math, plays.map(function (play) {
     return play.card.value;
   }));
@@ -182,12 +192,16 @@ var resolve = function resolve(plays) {
 };
 
 var wager = function wager() {
+  console.log('wagering');
   hands.forEach(function (hand) {
     pool.push(hand.play());
   });
 };
 
 var reward = function reward(winner) {
+  console.log('rewarding');
+  console.log('swing', pool.length);
+  maxSwing = pool.length > maxSwing ? pool.length : maxSwing;
   _helper2.default.shuffler(pool);
   hands.forEach(function (hand) {
     if (hand.name === winner) {
@@ -199,6 +213,7 @@ var reward = function reward(winner) {
 };
 
 var count = function count() {
+  console.log('counting');
   hands.forEach(function (hand) {
     var elem = document.querySelector('.' + hand.name + ' .count');
     if (hand.cards.length === 0) loser(hand.name);
@@ -218,7 +233,12 @@ var victor = function victor() {
   if (hands.length === 1) {
     clearInterval(intervalId);
     var winner = hands.shift();
+    reward(winner.player);
+    count();
     console.log(winner.name, 'wins!');
+    console.log(rounds, 'rounds played!');
+    console.log(wars, 'wars fought!');
+    console.log(maxSwing, 'was the highest card swing!');
   }
 };
 
@@ -232,7 +252,7 @@ playerDeck.addEventListener('click', round);
 window.addEventListener('keyup', function (evt) {
   if (evt.keyCode === 32) {
     if (intervalId) clearInterval(intervalId);
-    intervalId = setInterval(round, 250);
+    intervalId = setInterval(round, 50);
   }
 });
 

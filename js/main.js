@@ -9,10 +9,14 @@ let hands = [
 ];
 
 let war = false;
+let wars = 0;
+let rounds = 0;
+let maxSwing = 0;
 let pool = [];
 let playerDeck = document.querySelector('.player .deck');
 
 const round = function() {
+  rounds++;
   let plays = play(war);
   show(plays);
   let result = resolve(plays);
@@ -23,10 +27,14 @@ const round = function() {
     reward(winner.player);
   }
   count();
+  console.log('::=====-----=====::');
 }
 
 const play = function(war) {
+  console.log('playing');
+  if (war) console.log('warring');
   if (war) wager();
+  if (war) wars++;
   let plays = hands.map(hand => {
     return {
       player: hand.name,
@@ -38,6 +46,7 @@ const play = function(war) {
 }
 
 const show = function(plays) {
+  console.log('showing');
   plays.forEach(play => {
     let elem = document.querySelector(`.${play.player} .play`);
     let img = `img/cards/${play.card.suit}${play.card.face}.png`;
@@ -46,6 +55,7 @@ const show = function(plays) {
 }
 
 const resolve = function(plays) {
+  console.log('resolving');
   let max = Math.max.apply(Math, plays.map(play => play.card.value));
   return plays.reduce((acc, play) => {
     if (play.card.value === max) acc.push(play);
@@ -54,12 +64,16 @@ const resolve = function(plays) {
 }
 
 const wager = function() {
+  console.log('wagering');
   hands.forEach(hand => {
     pool.push(hand.play());
   });
 }
 
 const reward = function(winner) {
+  console.log('rewarding');
+  console.log('swing', pool.length);
+  maxSwing = pool.length > maxSwing ? pool.length : maxSwing;
   Helper.shuffler(pool);
   hands.forEach(hand => {
     if (hand.name === winner) {
@@ -71,6 +85,7 @@ const reward = function(winner) {
 }
 
 const count = function() {
+  console.log('counting');
   hands.forEach(hand => {
     let elem = document.querySelector(`.${hand.name} .count`);
     if (hand.cards.length === 0) loser(hand.name);
@@ -90,7 +105,12 @@ const victor = function() {
   if (hands.length === 1) {
     clearInterval(intervalId);
     let winner = hands.shift();
+    reward(winner.player);
+    count();
     console.log(winner.name, 'wins!');
+    console.log(rounds, 'rounds played!');
+    console.log(wars, 'wars fought!');
+    console.log(maxSwing, 'was the highest card swing!');
   }
 }
 
@@ -104,6 +124,6 @@ playerDeck.addEventListener('click', round);
 window.addEventListener('keyup', evt => {
   if (evt.keyCode === 32) {
     if (intervalId) clearInterval(intervalId);
-    intervalId = setInterval(round, 250);
+    intervalId = setInterval(round, 50);
   }
 })
